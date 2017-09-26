@@ -9,24 +9,30 @@ import (
 	"strings"
 )
 
+type Result struct {
+	url   string
+	count int
+}
+
 func init() {
 	log.SetFlags(0)
 }
 
 func main() {
-	k := 2;
+	k := 5;
 	processingChannel := make(chan string, k); // Channel for URLs
 	doneChan := make(chan bool);               // Used when all urls handled
-	results := make(map[string]int);
+	results := []Result{}                      // Results array
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for scanner.Scan() {
 		url := scanner.Text();
 
-		// Run handler
+		// Waiting for slot in channel
 		processingChannel <- url
 
-		go handleUrl(url, results, processingChannel, doneChan)
+		// Run handler
+		go handleUrl(url, &results, processingChannel, doneChan)
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -39,20 +45,21 @@ func main() {
 	total := 0
 
 	// Printing results for each url
-	for key, value := range results {
-		log.Println(key, ':', value)
-		total += value;
+	for _, res := range results {
+		log.Println(res.url, ':', res.count)
+		total += res.count;
 	}
 
 	log.Printf("Total: %v", total)
 }
 
-func handleUrl(url string, results map[string]int, processingChannel chan string, doneChan chan bool) {
+func handleUrl(url string, results *[]Result, processingChannel chan string, doneChan chan bool) {
 	// Go and get count
 	res := countGoEntries(request(url));
 
 	// Store result
-	results[url] = res;
+	result := Result{url, res}
+	*results = append(*results, result);
 
 	// Pull processed url so next can be pushed
 	<-processingChannel;
