@@ -41,7 +41,6 @@ func main() {
 
 	// waiting for all handlers
 	<-doneChan;
-
 	total := 0
 
 	// Printing results for each url
@@ -55,10 +54,11 @@ func main() {
 
 func handleUrl(url string, resultsPtr *[]Result, processingChannel chan string, doneChan chan bool) {
 	// Go and get count
-	res := countGoEntries(request(url));
+	body := request(url);
+	count := countGoEntries(body);
 
 	// Store result
-	result := Result{url, res}
+	result := Result{url, count}
 	*resultsPtr = append(*resultsPtr, result);
 
 	// Pull processed url so next can be pushed
@@ -73,10 +73,16 @@ func request(url string) string {
 	res, err := http.Get(url)
 
 	if err != nil {
-		log.Fatalln(err);
+		log.Println(err);
+		return ""
 	}
 
-	bodyBytes, _ := ioutil.ReadAll(res.Body);
+	bodyBytes, err := ioutil.ReadAll(res.Body);
+	if err != nil {
+		log.Println(err);
+		return ""
+	}
+
 	return string(bodyBytes);
 }
 
