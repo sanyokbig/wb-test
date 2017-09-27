@@ -53,13 +53,13 @@ func main() {
 	log.Printf("Total: %v", total)
 }
 
-func handleUrl(url string, results *[]Result, processingChannel chan string, doneChan chan bool) {
+func handleUrl(url string, resultsPtr *[]Result, processingChannel chan string, doneChan chan bool) {
 	// Go and get count
 	res := countGoEntries(request(url));
 
 	// Store result
 	result := Result{url, res}
-	*results = append(*results, result);
+	*resultsPtr = append(*resultsPtr, result);
 
 	// Pull processed url so next can be pushed
 	<-processingChannel;
