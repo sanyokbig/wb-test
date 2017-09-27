@@ -54,8 +54,15 @@ func main() {
 
 func handleUrl(url string, resultsPtr *[]Result, processingChannel chan string, doneChan chan bool) {
 	// Go and get count
-	body := request(url);
-	count := countGoEntries(body);
+	var count int;
+	body, err := request(url);
+
+	if err != nil {
+		// Instead of running counter, set counter to zero
+		count = 0;
+	} else {
+		count = countGoEntries(body);
+	}
 
 	// Store result
 	result := Result{url, count}
@@ -69,21 +76,21 @@ func handleUrl(url string, resultsPtr *[]Result, processingChannel chan string, 
 	};
 }
 
-func request(url string) string {
+func request(url string) (string, error) {
 	res, err := http.Get(url)
 
 	if err != nil {
 		log.Println(err);
-		return ""
+		return "", err
 	}
 
 	bodyBytes, err := ioutil.ReadAll(res.Body);
 	if err != nil {
 		log.Println(err);
-		return ""
+		return "", err
 	}
 
-	return string(bodyBytes);
+	return string(bodyBytes), nil;
 }
 
 func countGoEntries(s string) int {
